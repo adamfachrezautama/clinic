@@ -3,124 +3,97 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreDoctorRequest;
+use App\Http\Requests\UpdateDoctorRequest;
 use App\Models\User;
+use App\Services\DoctorService;
 use Illuminate\Http\Request;
 
 class DoctorController extends Controller
 {
-    //
+    protected DoctorService $doctorService;
+
+    public function __construct(DoctorService $doctorService)
+    {
+        $this->doctorService = $doctorService;
+    }
 
     public function index()
     {
         $doctors = User::where('role', 'doctor')->with('clinic', 'specialization')->get();
-        return response()->json([
-            'status' => 'success',
-            'data' => $doctors
-        ]);
+
+        return response()->json(['status' => 'success', 'data' => $doctors]);
     }
 
-    public function store(Request $request)
+    public function store(StoreDoctorRequest $request)
     {
-        $data = request()->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8',
-            'role' => 'required|string',
-            'clinic_id' => 'nullable|exists:clinics,id',
-            'specialization_id' => 'nullable|exists:specializations,id',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'certification' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-        ]);
+        $data = $request->validated();
+        $data['role'] = 'doctor'; // Set default role
 
-        $data['password'] = bcrypt($data['password']);
-        $doctor = User::create($data);
+        $doctor = $this->doctorService->create($data);
 
-        if($request->hasFile('photo')){
-            $image = $request->file('photo');
-            $imageName = time() . '.' . $image->getClientOriginalExtension();
-            $filePath = $image->storeAs('doctors', $imageName, 'public');
-            $doctor->photo = '/storage/' . $filePath;
-            $doctor->save();
+        if ($request->hasFile('photo')) {
+            $this->doctorService->uploadPhoto($doctor, $request->file('photo'));
         }
-        return response()->json([
-            'status' => 'success',
-            'data' => $doctor
-        ],201);
+
+        if ($request->hasFile('certification')) {
+            $this->doctorService->uploadCertification($doctor, $request->file('certification'));
+        }
+
+        return response()->json(['status' => 'success', 'data' => $doctor], 201);
     }
 
-    // update
-    public function update(Request $request, $id)
+    public function update(UpdateDoctorRequest $request, $id)
     {
         $doctor = User::findOrFail($id);
+        $data = $request->validated();
 
-        $data = request()->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|email|unique:users,email,' . $doctor->id,
-            'password' => 'sometimes|required|string|min:8',
-            'role' => 'sometimes|required|string',
-            'clinic_id' => 'nullable|exists:clinics,id',
-            'specialization_id' => 'nullable|exists:specializations,id',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'certification' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-        ]);
+        $this->doctorService->update($doctor, $data);
 
-        if(isset($data['password'])) {
-            $data['password'] = bcrypt($data['password']);
+        if ($request->hasFile('photo')) {
+            $this->doctorService->uploadPhoto($doctor, $request->file('photo'));
         }
 
-        $doctor->update($data);
-
-        if($request->hasFile('photo')){
-            $image = $request->file('photo');
-            $imageName = time() . '.' . $image->getClientOriginalExtension();
-            $filePath = $image->storeAs('doctors', $imageName, 'public');
-            $doctor->photo = '/storage/' . $filePath;
-            $doctor->save();
+        if ($request->hasFile('certification')) {
+            $this->doctorService->uploadCertification($doctor, $request->file('certification'));
         }
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $doctor
-        ]);
+        return response()->json(['status' => 'success', 'data' => $doctor]);
     }
+
     public function destroy($id)
     {
         $doctor = User::findOrFail($id);
         $doctor->delete();
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Doctor deleted successfully'
-        ]);
+        return response()->json(['status' => 'success', 'message' => 'Doctor deleted successfully']);
     }
 
-    // showDoctorActive
-    public function showDoctorActive()
+    public function getDoctorActive()
     {
-        $doctors = User::where('role', 'doctor')
-            ->where('status', 'active')
-            ->with('clinic', 'specialization')
-            ->get();
+        $doctors = User::where('role', 'doctor')->where('status', 'active')->with('clinic', 'specialization')->get();
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $doctors
-        ]);
+        return response()->json(['status' => 'success', 'data' => $doctors]);
     }
 
-    // get search doctor
     public function searchDoctor(Request $request)
     {
-        $doctors = User::where('role', 'doctor')
-            ->where('name', 'like', '%' . $request->name . '%')
-            ->orWhere('specialization_id',$request->specialization_id)
-            ->with('clinic', 'specialization')
-            ->get();
+        $query = User::where('role', 'doctor');
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $doctors
-        ]);
+        if ($request->filled('name')) {
+            $query->where('name', 'like', '%' . $request->name . '%');
+        }
+
+        if ($request->filled('specialization_id')) {
+            $query->where('specialization_id', $request->specialization_id);
+        }
+
+        if ($request->filled('clinic_id')) {
+            $query->where('clinic_id', $request->clinic_id);
+        }
+
+        $doctors = $query->with('clinic', 'specialization')->get();
+
+        return response()->json(['status' => 'success', 'data' => $doctors]);
     }
-
 }

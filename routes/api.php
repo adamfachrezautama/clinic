@@ -1,72 +1,63 @@
 <?php
 
-use App\Http\Controllers\Api\DoctorController;
-use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\DoctorController;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+/*
+|--------------------------------------------------------------------------
+| Public Routes (Tanpa Auth)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('auth')->group(function () {
+    Route::post('/login', [UserController::class, 'login'])->name('api.login');
+});
 
-// login
-Route::post('/login', UserController::class . '@login')
-    ->name('api.login');
+/*
+|--------------------------------------------------------------------------
+| Protected Routes (Butuh Login & Auth)
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth:sanctum')->group(function () {
 
-//user check
-Route::post('/user/check', UserController::class . '@check')
-    ->name('api.user.check')
-    ->middleware('auth:sanctum');
+    // ========================
+    // 🧑‍💼 USER ROUTES
+    // ========================
+    Route::post('/logout', [UserController::class, 'logout'])->name('api.logout');
 
-    // logout
-    Route::post('/logout', UserController::class . '@logout')
-        ->name('api.logout')
-        ->middleware('auth:sanctum');
+    Route::post('/user/check', [UserController::class, 'check'])->name('api.user.check');
 
-    // store
-    Route::post('/user', UserController::class . '@store')
-        ->name('api.user.store')
-        ->middleware('auth:sanctum');
+    Route::post('/user', [UserController::class, 'store'])
+        ->middleware('permission:create users')
+        ->name('api.user.store');
 
-    // get user
-    Route::get('/user/{email}', UserController::class . '@show')
-        ->name('api.user.show')
-        ->middleware('auth:sanctum');
+    Route::get('/user/{email}', [UserController::class, 'show'])
+        ->middleware('permission:view users')
+        ->name('api.user.show');
 
-    // update google id
-    Route::put('/user/googleid/{id}', UserController::class . '@updateGoogleId')
-        ->name('api.user.updateGoogleId')
-        ->middleware('auth:sanctum');
+    Route::put('/user/googleid/{id}', [UserController::class, 'updateGoogleId'])
+        ->middleware('permission:edit users')
+        ->name('api.user.updateGoogleId');
 
-    // update user
-    Route::put('/user/{id}', UserController::class . '@update')
-        ->name('api.user.update')
-        ->middleware('auth:sanctum');
+    Route::put('/user/{id}', [UserController::class, 'update'])
+        ->middleware('permission:edit users')
+        ->name('api.user.update');
 
+    // ========================
+    // 👨‍⚕️ DOCTOR ROUTES
+    // ========================
 
-    // doctor
+    Route::apiResource('doctors', DoctorController::class)
+        ->only(['index', 'store', 'show', 'update', 'destroy'])
+        ->middleware([
+            'permission:view doctors|create doctors|edit doctors|delete doctors'
+        ]);
 
-    //get all doctors
-    Route::get('/doctors', DoctorController::class, '@index');
+    Route::get('doctors-active', [DoctorController::class, 'getDoctorActive'])
+        ->middleware('permission:view doctors');
 
-    // store doctor
-    Route::post('/doctors', DoctorController::class . '@store')
-        ->name('api.doctor.store')
-        ->middleware('auth:sanctum');
+    Route::get('doctors-search', [DoctorController::class, 'searchDoctor'])
+        ->middleware('permission:view doctors');
 
-    // update doctor
-    Route::put('/doctors/{id}', DoctorController::class . '@update')
-        ->name('api.doctor.update')
-        ->middleware('auth:sanctum');
-    // delete doctor
-    Route::delete('/doctors/{id}', DoctorController::class . '@destroy')
-        ->name('api.doctor.destroy')
-        ->middleware('auth:sanctum');
-    // get active doctors
-    Route::get('/doctors/active', DoctorController::class . '@showDoctorActive')
-        ->name('api.doctor.showDoctorActive')
-        ->middleware('auth:sanctum');
-    // search doctor
-    Route::get('/doctors/search', DoctorController::class . '@searchDoctor')
-        ->name('api.doctor.searchDoctor')
-        ->middleware('auth:sanctum');
+});
