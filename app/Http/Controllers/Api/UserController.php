@@ -3,40 +3,68 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
+use App\Services\UserService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
-    //
+    protected UserService $userService;
 
-    public function index($email)
+    public function __construct(UserService $userService)
     {
-        // Assuming you have a User model and a method to find by email
-        $user = \App\Models\User::where('email', $email)->first();
-
-        if (!$user) {
-            return response()->json(['message' => 'User not found'], 404);
-        }
-
-        return response()->json($user);
+        $this->userService = $userService;
     }
 
+    public function login(Request $request)
+    {
+        $credentials = $request->only('email', 'password');
 
-     // Find the user by ID
+        if (!Auth::attempt($credentials)) {
+            return response()->json(['status' => 'error', 'message' => 'Invalid credentials'], 401);
+        }
+
+        $user = Auth::user();
+        $token = $user->createToken('api_token')->plainTextToken;
+
+        return response()->json(['status' => 'success', 'token' => $token, 'user' => $user]);
+    }
+
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json(['status' => 'success', 'message' => 'Logged out']);
+    }
+
+    public function check(Request $request)
+    {
+        return response()->json(['status' => 'success', 'user' => $request->user()]);
+    }
+
+    public function store(StoreUserRequest $request)
+    {
+        $data = $request->validated();
+        $data['role'] = 'patient'; // default role
+        $user = $this->userService->create($data);
+
+        return response()->json(['status' => 'success', 'data' => $user], 201);
+    }
+
+    public function show($email)
+    {
+        $user = User::where('email', $email)->firstOrFail();
+        return response()->json(['status' => 'success', 'data' => $user]);
+    }
+
     public function updateGoogleId(Request $request, $id)
     {
-        // Validate the request
-        $request->validate([
-            'google_id' => 'required|string',
-        ]);
-
-        $user = User::find($id);
-
-        if($user){
-            $user->google_id = $request->google_id;
-            $user->save();
+        $user = User::findOrFail($id);
+        $user->google_id = $request->google_id;
+        $user->save();
 
             return response()->json(['status' => 'success',
                 'data' => $user

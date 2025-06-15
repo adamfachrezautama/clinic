@@ -19,15 +19,16 @@ Route::post('/user/checkemail', UserController::class . '@checkEmail')
     ->name('api.user.checkemail')
     ->middleware('auth:sanctum');
 
-    // logout
-    Route::post('/logout', UserController::class . '@logout')
-        ->name('api.logout')
-        ->middleware('auth:sanctum');
+    // ========================
+    // 🧑‍💼 USER ROUTES
+    // ========================
+    Route::post('/logout', [UserController::class, 'logout'])->name('api.logout');
 
-    // store
-    Route::post('/user', UserController::class . '@store')
-        ->name('api.user.store')
-        ->middleware('auth:sanctum');
+    Route::post('/user/check', [UserController::class, 'check'])->name('api.user.check');
+
+    Route::post('/user', [UserController::class, 'store'])
+        ->middleware('permission:create users')
+        ->name('api.user.store');
 
     // get user
     Route::get('/user/{email}', UserController::class . '@index')
