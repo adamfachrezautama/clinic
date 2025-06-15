@@ -66,6 +66,7 @@ class UserController extends Controller
         $user->google_id = $request->google_id;
         $user->save();
 
+<<<<<<< HEAD
             return response()->json(['status' => 'success',
                 'data' => $user
         ]);
@@ -76,33 +77,23 @@ class UserController extends Controller
 
         ], 404);
         }
+=======
+        return response()->json(['status' => 'success', 'data' => $user]);
+>>>>>>> f1d5cb21c242a3f53df081922a535f2bac30db29
     }
 
-    //update user
-    public function update(Request $request, $id)
+    public function update(UpdateUserRequest $request, $id)
     {
-        // Validate the request
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . $id,
-            'phone' => 'required',
-            'address' => 'nullable|string|max:255',
-            'google_id' => 'nullable|string',
-            'ktp_number' => 'nullable|string|max:20',
-            'birth_date' => 'nullable|date',
-            'password' => 'nullable|string|min:8|confirmed',
-            'gender' => 'nullable|string',
-        ]);
+        $user = User::findOrFail($id);
+        $data = $request->validated();
 
-         $email = $request->email;
-        $password = $request->password;
-         $user = User::where('email', $email)->first();
+        $this->userService->update($user, $data);
 
-        if(!$user || Hash::check($password, $user->password)){
-            return response()->json(['status' => 'error',
-            'message' => 'email or password is incorrect'], 401);
+        if ($request->hasFile('photo')) {
+            $this->userService->uploadPhoto($user, $request->file('photo'));
         }
 
+<<<<<<< HEAD
       $token = $user->createToken('auth_token')->plainTextToken;
 
       return response()->json([
@@ -182,6 +173,9 @@ class UserController extends Controller
             'data' => $user
         ], 201);
 
+=======
+        return response()->json(['status' => 'success', 'data' => $user]);
+>>>>>>> f1d5cb21c242a3f53df081922a535f2bac30db29
     }
 
     // check if email exists

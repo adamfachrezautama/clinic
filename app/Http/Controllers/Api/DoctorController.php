@@ -70,8 +70,11 @@ class DoctorController extends Controller
     }
 
     public function getDoctorActive()
+<<<<<<< HEAD
     // showDoctorActive
     public function getDoctorActive()
+=======
+>>>>>>> f1d5cb21c242a3f53df081922a535f2bac30db29
     {
         $doctors = User::where('role', 'doctor')->where('status', 'active')->with('clinic', 'specialization')->get();
 
@@ -81,6 +84,7 @@ class DoctorController extends Controller
     public function searchDoctor(Request $request)
     {
         $query = User::where('role', 'doctor');
+<<<<<<< HEAD
 
         if ($request->filled('name')) {
             $query->where('name', 'like', '%' . $request->name . '%');
@@ -102,6 +106,23 @@ class DoctorController extends Controller
             ->with('clinic', 'specialization')
             ->get();
 
+=======
+
+        if ($request->filled('name')) {
+            $query->where('name', 'like', '%' . $request->name . '%');
+        }
+
+        if ($request->filled('specialization_id')) {
+            $query->where('specialization_id', $request->specialization_id);
+        }
+
+        if ($request->filled('clinic_id')) {
+            $query->where('clinic_id', $request->clinic_id);
+        }
+
+        $doctors = $query->with('clinic', 'specialization')->get();
+
+>>>>>>> f1d5cb21c242a3f53df081922a535f2bac30db29
         return response()->json(['status' => 'success', 'data' => $doctors]);
     }
 }

@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
         User::factory()->create([
             'name' => 'admin',
             'email' => 'admin@mail.com',
+<<<<<<< HEAD
             'password' => bcrypt('1234567890'),
             'role' => 'admin',
         ]);
@@ -30,6 +31,10 @@ class DatabaseSeeder extends Seeder
             'name' => 'user1',
             'email' => 'user1@mail.com',
             'password' => bcrypt('1234567890'),
+=======
+            'password' => bcrypt('password'),
+            'role' => 'admin',
+>>>>>>> f1d5cb21c242a3f53df081922a535f2bac30db29
         ]);
 
         Specialization::create([
