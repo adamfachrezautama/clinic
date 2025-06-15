@@ -95,7 +95,7 @@ class DoctorController extends Controller
     }
 
     // showDoctorActive
-    public function showDoctorActive()
+    public function getDoctorActive()
     {
         $doctors = User::where('role', 'doctor')
             ->where('status', 'active')
@@ -114,6 +114,7 @@ class DoctorController extends Controller
         $doctors = User::where('role', 'doctor')
             ->where('name', 'like', '%' . $request->name . '%')
             ->orWhere('specialization_id',$request->specialization_id)
+            ->orWhere('clinic_id', $request->clinic_id)
             ->with('clinic', 'specialization')
             ->get();
 
