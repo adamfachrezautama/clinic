@@ -12,7 +12,12 @@ class UserService
     {
         $data['password'] = Hash::make($data['password']);
 
-        return User::create($data);
+        $user = User::create($data);
+
+        $user->assignRole('patient'); // Default role for new users on table model_has_roles
+
+        return $user;
+
     }
 
    public function update(User $user, array $data)

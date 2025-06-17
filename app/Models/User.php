@@ -13,16 +13,13 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements FilamentUser
 {
-    use HasFactory, HasRoles, HasApiTokens;
+    use HasFactory, HasApiTokens, HasRoles;
 
     public function canAccessPanel(Panel $panel): bool
     {
        if($panel->getId() === 'admin') {
-<<<<<<< HEAD
+
             return str_ends_with($this->email, 'admin@mail.com');
-=======
-            return str_ends_with($this->email, '@mail.com');
->>>>>>> f1d5cb21c242a3f53df081922a535f2bac30db29
         }
 
         return true;

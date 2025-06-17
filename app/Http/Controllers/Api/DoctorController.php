@@ -69,12 +69,10 @@ class DoctorController extends Controller
         return response()->json(['status' => 'success', 'message' => 'Doctor deleted successfully']);
     }
 
-    public function getDoctorActive()
-<<<<<<< HEAD
+
     // showDoctorActive
     public function getDoctorActive()
-=======
->>>>>>> f1d5cb21c242a3f53df081922a535f2bac30db29
+
     {
         $doctors = User::where('role', 'doctor')->where('status', 'active')->with('clinic', 'specialization')->get();
 
@@ -84,7 +82,7 @@ class DoctorController extends Controller
     public function searchDoctor(Request $request)
     {
         $query = User::where('role', 'doctor');
-<<<<<<< HEAD
+
 
         if ($request->filled('name')) {
             $query->where('name', 'like', '%' . $request->name . '%');
@@ -106,7 +104,7 @@ class DoctorController extends Controller
             ->with('clinic', 'specialization')
             ->get();
 
-=======
+
 
         if ($request->filled('name')) {
             $query->where('name', 'like', '%' . $request->name . '%');
@@ -122,7 +120,7 @@ class DoctorController extends Controller
 
         $doctors = $query->with('clinic', 'specialization')->get();
 
->>>>>>> f1d5cb21c242a3f53df081922a535f2bac30db29
+
         return response()->json(['status' => 'success', 'data' => $doctors]);
     }
 }

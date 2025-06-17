@@ -10,7 +10,10 @@ class DoctorService
     public function create(array $data)
     {
         $data['password'] = Hash::make($data['password']);
-        return User::create($data);
+        $doctor = User::create($data);
+        $doctor->assignRole(['doctor','patient']); // Assign the 'doctor' role to the new
+
+        return $doctor;
     }
 
     public function update(User $doctor, array $data)

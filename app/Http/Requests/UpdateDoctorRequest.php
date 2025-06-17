@@ -23,7 +23,7 @@ class UpdateDoctorRequest extends FormRequest
     {
         return [
              'name' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|email|unique:users,email,' . $id,
+            'email' => 'sometimes|required|email|unique:users,email,',
             'password' => 'sometimes|required|string|min:8',
             'role' => 'sometimes|required|string',
             'clinic_id' => 'nullable|exists:clinics,id',

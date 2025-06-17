@@ -3,10 +3,10 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class RolePermissionSeeder extends Seeder
 {
@@ -17,7 +17,9 @@ class RolePermissionSeeder extends Seeder
     {
         //
   // Reset cache permission
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
+
+        $guard = ['web', 'api']; // Specify the guards you want to use
 
         // === Permissions ===
         $permissions = [
@@ -32,29 +34,56 @@ class RolePermissionSeeder extends Seeder
         ];
 
         foreach ($permissions as $perm) {
-            Permission::firstOrCreate(['name' => $perm]);
+            foreach ($guard as $g) {
+                // Create permission for each guard
+                Permission::firstOrCreate([
+                    'name' => $perm,
+                     'guard_name' => $g]);
+            }
         }
 
         // === Roles ===
-        $admin = Role::firstOrCreate(['name' => 'admin']);
-        $doctor = Role::firstOrCreate(['name' => 'doctor']);
-        $patient = Role::firstOrCreate(['name' => 'patient']);
+        $admin = Role::firstOrCreate(['name' => 'admin','guard_name' => 'web']);
+        $doctor = Role::firstOrCreate(['name' => 'doctor','guard_name' => 'api']);
+        $patient = Role::firstOrCreate(['name' => 'patient','guard_name' => 'api']);
 
         // === Assign permissions to roles ===
-        $admin->syncPermissions(Permission::all()); // semua
-        $doctor->syncPermissions([
+        $admin->syncPermissions(Permission::where('guard_name','web')->get()); // semua
+
+
+        $doctor->syncPermissions(Permission::where('guard_name','api')->whereIn('name',[
             'view users',
             'view doctors',
-        ]);
-        $patient->syncPermissions([
+            'create doctors',
+            'edit doctors',
+        ])->get());
+
+        $patient->syncPermissions(Permission::where('guard_name','api')->whereIn('name',[
             'view doctors',
-        ]);
+            'create users', // Assuming patients can create their own user profile
+            'edit users', // Assuming patients can edit their own user profile
+            'view users', // Assuming patients can view their own user profile
+        ])->get());
 
         // === Optional: Assign admin role to specific user ===
         $adminUser = User::where('email', 'admin@mail.com')->first();
         if ($adminUser) {
             $adminUser->assignRole($admin);
         }
+
+         // === Optional: Assign doctor role to specific user ===
+        $doctorUser = User::where('email', 'doctor1@mail.com')->first();
+        if ($doctorUser) {
+            $doctorUser->assignRole($doctor);
+        }
+
+          // === Optional: Assign patient role to specific user ===
+        $patientUser = User::where('email', 'patient1@mail.com')->first();
+        if ($patientUser) {
+            $patientUser->assignRole($patient);
+        }
+
+
 
     }
 }

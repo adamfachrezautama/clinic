@@ -42,13 +42,16 @@ class UserController extends Controller
 
     public function check(Request $request)
     {
-        return response()->json(['status' => 'success', 'user' => $request->user()]);
+        return response()->json([
+            'status' => 'success',
+             'user' => $request->user()]);
     }
 
     public function store(StoreUserRequest $request)
     {
         $data = $request->validated();
-        $data['role'] = 'patient'; // default role
+
+
         $user = $this->userService->create($data);
 
         return response()->json(['status' => 'success', 'data' => $user], 201);
@@ -66,20 +69,20 @@ class UserController extends Controller
         $user->google_id = $request->google_id;
         $user->save();
 
-<<<<<<< HEAD
+
             return response()->json(['status' => 'success',
                 'data' => $user
         ]);
-        }else{
+
             return response()->json([
                 'status' => 'error',
                 'message' => 'User not found',
 
         ], 404);
-        }
-=======
+
+
         return response()->json(['status' => 'success', 'data' => $user]);
->>>>>>> f1d5cb21c242a3f53df081922a535f2bac30db29
+
     }
 
     public function update(UpdateUserRequest $request, $id)
@@ -93,7 +96,7 @@ class UserController extends Controller
             $this->userService->uploadPhoto($user, $request->file('photo'));
         }
 
-<<<<<<< HEAD
+
       $token = $user->createToken('auth_token')->plainTextToken;
 
       return response()->json([
@@ -103,79 +106,6 @@ class UserController extends Controller
             'token' => $token
         ]
       ],200);
-    }
-
-    // login
-    public function login(Request $request)
-    {
-        // Validate the request
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string|min:8',
-        ]);
-
-        $email = $request->email;
-        $password = $request->password;
-
-        $user = User::where('email', $email)->first();
-
-        if (!$user || !Hash::check($password, $user->password)) {
-            return response()->json(['status' => 'error',
-                'message' => 'Email or password is incorrect'], 401);
-        }
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'user' => $user,
-                'token' => $token
-            ]
-        ], 200);
-    }
-
-    //logout
-    public function logout(Request $request){
-        $request->user()->currentAccessToken()->delete();
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Logged out successfully'
-        ]);
-    }
-
-
-
-    // store
-    public function store(Request $request)
-    {
-
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'phone' => 'required',
-        ]);
-        $data = $request->all();
-        $name = $request->name;
-        $email = $request->email;
-        $password = Hash::make($request->password);
-        $role = $request->role ?? 'patient';
-        $user = User::create([
-            'name' => $name,
-            'email' => $email,
-            'password' => $password,
-            'role' => $role,
-        ]);
-
-        return response()->json([
-            'status' => 'success',
-            'data' => $user
-        ], 201);
-
-=======
-        return response()->json(['status' => 'success', 'data' => $user]);
->>>>>>> f1d5cb21c242a3f53df081922a535f2bac30db29
     }
 
     // check if email exists
