@@ -25,6 +25,11 @@ class User extends Authenticatable implements FilamentUser
         return true;
     }
 
+     public function getDefaultGuardName(): string
+    {
+        return 'api';
+    }
+
 
 
     /**
@@ -32,6 +37,9 @@ class User extends Authenticatable implements FilamentUser
      *
      * @var list<string>
      */
+
+
+
     protected $fillable = [
         'name',
         'email',

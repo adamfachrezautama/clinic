@@ -4,6 +4,7 @@ namespace App\Services;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class DoctorService
 {
@@ -11,7 +12,11 @@ class DoctorService
     {
         $data['password'] = Hash::make($data['password']);
         $doctor = User::create($data);
-        $doctor->assignRole(['doctor','patient']); // Assign the 'doctor' role to the new
+        $roles =[
+            Role::findByName('doctor','api'),
+            Role::findbyName('patient','api'),
+        ];
+         $doctor->syncRoles($roles);// Assign the 'doctor' role to the new
 
         return $doctor;
     }

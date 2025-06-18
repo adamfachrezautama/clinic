@@ -22,9 +22,8 @@ class UpdateUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,',
-            'phone' => 'required',
+            'name' => 'string|max:255',
+            'phone' => 'string|max:20',
             'address' => 'nullable|string|max:255',
             'google_id' => 'nullable|string',
             'ktp_number' => 'nullable|string|max:20',

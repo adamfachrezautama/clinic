@@ -9,18 +9,18 @@ Route::prefix('auth')->group(function () {
     Route::post('/login', [UserController::class, 'login'])->name('api.login');
 });
 
+Route::post('/register', [UserController::class, 'store'])->name('api.user.register');
+Route::post('/logout',[UserController::class, 'logout'])->name('api.logout');
+
 Route::middleware('auth:sanctum')->group(function () {
 
     // ✅ USER
-    Route::controller(UserController::class)->group(function () {
-        Route::post('/logout', 'logout')->name('api.logout');
-        Route::post('/user/check', 'check')->name('api.user.check');
-        Route::post('/user/checkemail', 'checkEmail')->name('api.user.checkemail');
-
-        Route::post('/user', 'store')->middleware('permission:create users')->name('api.user.store');
-        Route::get('/user/{email}', 'show')->middleware('permission:view users')->name('api.user.show');
-        Route::put('/user/googleid/{id}', 'updateGoogleId')->middleware('permission:edit users')->name('api.user.updateGoogleId');
-        Route::put('/user/{id}', 'update')->middleware('permission:edit users')->name('api.user.update');
+    Route::controller(UserController::class)->prefix('user')->group(function () {
+        Route::post('/check', 'check')->name('api.user.check');
+        Route::post('/checkemail', 'checkEmail')->name('api.user.checkemail');
+        Route::get('/{email}', 'show')->middleware('permission:view users')->name('api.user.show');
+        Route::put('/googleid/{id}', 'updateGoogleId')->middleware('permission:edit users')->name('api.user.updateGoogleId');
+        Route::put('/{id}', 'update')->middleware('permission:edit users')->name('api.user.update');
     });
 
     // ✅ DOCTOR

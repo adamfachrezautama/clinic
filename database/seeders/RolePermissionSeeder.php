@@ -71,19 +71,21 @@ class RolePermissionSeeder extends Seeder
             $adminUser->assignRole($admin);
         }
 
-         // === Optional: Assign doctor role to specific user ===
+         // === Assign doctor + patient roles to doctor user ===
         $doctorUser = User::where('email', 'doctor1@mail.com')->first();
         if ($doctorUser) {
-            $doctorUser->assignRole($doctor);
+            $doctorUser->syncRoles([
+                Role::findByName('doctor', 'api'),
+                Role::findByName('patient', 'api'),
+            ]);
         }
 
-          // === Optional: Assign patient role to specific user ===
+        // === Assign patient role to patient user ===
         $patientUser = User::where('email', 'patient1@mail.com')->first();
         if ($patientUser) {
-            $patientUser->assignRole($patient);
+            $patientUser->syncRoles([
+                Role::findByName('patient', 'api'),
+            ]);
         }
-
-
-
     }
 }

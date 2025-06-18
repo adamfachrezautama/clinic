@@ -50,11 +50,9 @@ class UserController extends Controller
     public function store(StoreUserRequest $request)
     {
         $data = $request->validated();
-
-
         $user = $this->userService->create($data);
 
-        return response()->json(['status' => 'success', 'data' => $user], 201);
+    return response()->json(['status' => 'success', 'data' => $user], 201);
     }
 
     public function show($email)
