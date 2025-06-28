@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
             SpecializationSeeder::class,
             UserSeeder::class,
             RolePermissionSeeder::class,
+
+
         ]);
 
 

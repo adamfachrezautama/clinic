@@ -32,8 +32,10 @@ class UserService
    public function update(User $user, array $data)
 
     {
-        if (isset($data['password'])) {
+        if (!empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
+        }else{
+            unset($data['password']); // jangan update kalau kosong
         }
 
         $user->update($data);

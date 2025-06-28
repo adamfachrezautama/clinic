@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('gender')->nullable();
             $table->string('phone')->nullable();
             $table->string('address')->nullable();
-            $table->string('status')->default('not_active');
+            $table->string('status')->default('offline');
             $table->string('certification')->nullable();
             $table->integer('telemedicine_fee')->default(0);
             $table->string('photo')->nullable();
