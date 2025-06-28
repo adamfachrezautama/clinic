@@ -52,7 +52,11 @@ class UserController extends Controller
         $data = $request->validated();
         $user = $this->userService->create($data);
 
-    return response()->json(['status' => 'success', 'data' => $user], 201);
+        if ($request->hasFile('photo')) {
+            $this->userService->uploadPhoto($user, $request->file('photo'));
+        }
+
+        return response()->json(['status' => 'success', 'data' => $user], 201);
     }
 
     public function show($email)
@@ -105,6 +109,7 @@ class UserController extends Controller
         'status' => 'success',
         'data' => [
             'user' => $user,
+
         ]
       ],200);
     }

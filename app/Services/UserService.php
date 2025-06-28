@@ -44,20 +44,22 @@ class UserService
 
     public function uploadPhoto(User $user, $photo)
     {
-        if ($user->photo && Storage::disk('public')->exists(str_replace('/storage/', '', $user->photo))) {
-            Storage::disk('public')->delete(str_replace('/storage/', '', $user->photo));
+        // Hapus foto lama
+        if ($user->photo && Storage::disk('public')->exists($user->photo)) {
+            Storage::disk('public')->delete($user->photo);
         }
 
-        $imageName = time() . '.' . $photo->getClientOriginalExtension();
-        $path = $photo->storeAs('user', $imageName, 'public');
-        $user->photo = '/storage/' . $path;
+        $imageName = $photo->hashName(); // Nama otomatis unik
+        $path = $photo->storeAs('user/photos', $imageName, 'public');
+
+        $user->photo = $path; // Simpan hanya path relatif misalnya: user/filename.jpg
         $user->save();
     }
     public function deletePhoto(User $user)
-{
-    if ($user->photo && Storage::disk('public')->exists(str_replace('/storage/', '', $user->photo))) {
-        Storage::disk('public')->delete(str_replace('/storage/', '', $user->photo));
+    {
+        if ($user->photo && Storage::disk('public')->exists(str_replace('/storage/', '', $user->photo))) {
+            Storage::disk('public')->delete(str_replace('/storage/', '', $user->photo));
+        }
     }
-}
 
 }

@@ -80,11 +80,17 @@ class UserResource extends Resource
                     ->numeric()
                     ->default(0),
                 FileUpload::make('photo')
-                    ->label('Upload Foto')
-                    ->acceptedFileTypes(['image/jpeg', 'image/png']) // hanya jpg dan png
-                    ->minSize(100) // 100 KB
-                    ->maxSize(2048) // 2 MB
-                    ->image(), // tambahan agar preview image muncul
+                    ->label('Foto')
+                    ->image()
+                    ->directory('user/photos') // folder tempat penyimpanan
+                    ->visibility('public') // agar bisa diakses di /storage/user/
+                    ->preserveFilenames() // opsional
+                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/jpg'])
+                    ->maxSize(2048)
+                    ->imagePreviewHeight('250')
+                    ->columnSpanFull()
+                    ->dehydrated(fn ($state) => filled($state)) // pastikan hanya disimpan jika ada isinya
+                    ->required(fn ($livewire) => $livewire instanceof \Filament\Resources\Pages\CreateRecord), // hanya required saat create
                 TextInput::make('chat_fee')
                     ->required()
                     ->numeric()
