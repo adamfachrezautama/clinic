@@ -60,6 +60,8 @@ class User extends Authenticatable implements FilamentUser
         'end_time',
         'clinic_id',
         'specialization_id',
+        'registration_type',
+        'status_verified',
 
     ];
 

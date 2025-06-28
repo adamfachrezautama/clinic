@@ -27,6 +27,7 @@ class StoreUserRequest extends FormRequest
             'password' => ['required', 'string', 'min:6','nullable'],
             'role' => ['nullable', 'in:patient,doctor,admin'],
             'registration_type' => ['required', 'in:patient,doctor'],
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048']
 
         ];
     }

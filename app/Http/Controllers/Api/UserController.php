@@ -85,7 +85,14 @@ class UserController extends Controller
 
     public function update(UpdateUserRequest $request, $id)
     {
+        $auth = auth()->user();
         $user = User::findOrFail($id);
+        if(!$auth->hasRole('admin') && $auth->id !== $user->id){
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized to update this user',
+            ], 403);
+        }
         $data = $request->validated();
 
         $this->userService->update($user, $data);
@@ -94,14 +101,10 @@ class UserController extends Controller
             $this->userService->uploadPhoto($user, $request->file('photo'));
         }
 
-
-      $token = $user->createToken('auth_token')->plainTextToken;
-
       return response()->json([
         'status' => 'success',
         'data' => [
             'user' => $user,
-            'token' => $token
         ]
       ],200);
     }

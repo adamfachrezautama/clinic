@@ -3,18 +3,18 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
-use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\Clinic;
 use App\Models\Specialization;
 use App\Models\User;
-use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\FileUpload;
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
@@ -25,73 +25,81 @@ class UserResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')
+                TextInput::make('name')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('email')
+                TextInput::make('email')
                     ->email()
                     ->required()
+                    ->hidden(fn ($livewire) => $livewire instanceof \Filament\Resources\Pages\EditRecord) // hidden saat update
                     ->maxLength(255),
-                Forms\Components\DateTimePicker::make('email_verified_at'),
-                Forms\Components\TextInput::make('password')
+                DateTimePicker::make('email_verified_at'),
+                TextInput::make('password')
                     ->password()
                     ->label('Password')
                     ->dehydrateStateUsing(fn($state) => filled($state) ? bcrypt($state) : null) // hanya update jika diisi
                     ->required(fn($livewire) => $livewire instanceof \Filament\Resources\Pages\CreateRecord) // hanya required saat create
                     ->maxLength(255),
-                Forms\Components\TextInput::make('role')
+                TextInput::make('role')
                     ->required()
                     ->maxLength(255),
                     // ->default('patient'),
-                Forms\Components\TextInput::make('google_id')
+                TextInput::make('google_id')
+                ->hidden(fn ($livewire) => $livewire instanceof \Filament\Resources\Pages\EditRecord) // hidden saat update
                     ->maxLength(255),
-                Forms\Components\TextInput::make('ktp_number')
+                TextInput::make('ktp_number')
                     ->maxLength(255),
-                Forms\Components\DatePicker::make('birth_date'),
-                Forms\Components\TextInput::make('gender')
+                DatePicker::make('birth_date'),
+                TextInput::make('gender')
                     ->maxLength(255),
-                Forms\Components\Select::make('registration_type')
+                Select::make('registration_type')
                     ->options([
                         'patient' => 'Patient',
                         'doctor' => 'Doctor',
                     ])
                     ->required(),
-                Forms\Components\TextInput::make('phone')
+                TextInput::make('phone')
                     ->tel()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('address')
+                TextInput::make('address')
                     ->maxLength(255),
-                 Forms\Components\Select::make('status')
+                 Select::make('status')
                     ->options([
                         'offline' => 'offline',
                         'online' => 'online',
                     ])
                     ->required(),
-                Forms\Components\TextInput::make('certification')
+                TextInput::make('certification')
                     ->maxLength(255),
-                Forms\Components\TextInput::make('telemedicine_fee')
+                FileUpload::make('document')->acceptedFileTypes(['application/pdf'])
+                    ->minSize(512)
+                    ->maxSize(1024),
+                TextInput::make('telemedicine_fee')
                     ->tel()
                     ->required()
                     ->numeric()
                     ->default(0),
-                Forms\Components\TextInput::make('photo')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('chat_fee')
+                FileUpload::make('photo')
+                    ->label('Upload Foto')
+                    ->acceptedFileTypes(['image/jpeg', 'image/png']) // hanya jpg dan png
+                    ->minSize(100) // 100 KB
+                    ->maxSize(2048) // 2 MB
+                    ->image(), // tambahan agar preview image muncul
+                TextInput::make('chat_fee')
                     ->required()
                     ->numeric()
                     ->default(0),
-                Forms\Components\TextInput::make('start_time'),
-                Forms\Components\TextInput::make('end_time'),
-                Forms\Components\Select::make('clinic_id')
+                TextInput::make('start_time'),
+                TextInput::make('end_time'),
+                Select::make('clinic_id')
                     ->label('Clinic')
                     ->options(Clinic::all()->pluck('name','id'))
                     ->searchable(),
-
-                Forms\Components\Select::make('specialization_id')
+                Select::make('specialization_id')
                     ->label('specialization')
                     ->options(Specialization::all()->pluck('name','id'))
                     ->searchable(),
-                 Forms\Components\Select::make('status_registration')
+                 Select::make('status_registration')
                     ->options([
                         'pending' => 'pending',
                         'verified' => 'verified',
