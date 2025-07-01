@@ -1,12 +1,14 @@
 <?php
 
 use App\Http\Controllers\Api\DoctorController;
+use App\Http\Controllers\Api\FirebaseAuthController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [UserController::class, 'login'])->name('api.login');
+    Route::post('/firebase-login', [FirebaseAuthController::class, 'login']);
 });
 
 Route::post('/register', [UserController::class, 'store'])->name('api.user.register');

@@ -62,6 +62,7 @@ class User extends Authenticatable implements FilamentUser
         'specialization_id',
         'registration_type',
         'status_verified',
+        'status'
 
     ];
 
@@ -85,6 +86,7 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'photo' => 'string',
         ];
     }
 

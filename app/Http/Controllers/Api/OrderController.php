@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreOrderRequest;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Xendit\Configuration;
@@ -22,19 +23,9 @@ class OrderController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreOrderRequest $request)
     {
-        $request->validate([
-            'patient_id' => 'required',
-            'doctor_id' => 'required',
-            'service' => 'required',
-            'price' => 'required',
-            'duration' => 'required',
-            'clinic_id' => 'required',
-            'schedule' => 'required',
-        ]);
-
-        $data = $request->all();
+        $data = $request->validated();
 
         $order = Order::create($data);
 
