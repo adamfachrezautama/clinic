@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('certification')->nullable();
             $table->integer('telemedicine_fee')->default(0);
             $table->string('photo')->nullable();
+            $table->string('one_signal_token')->nullable();
             $table->integer('chat_fee')->default(0);
             $table->time('start_time')->nullable();
             $table->time('end_time')->nullable();

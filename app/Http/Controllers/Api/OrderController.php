@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreOrderRequest;
 use App\Models\Order;
+use App\Models\User;
+use Berkayk\OneSignal\OneSignalFacade;
 use Illuminate\Http\Request;
 use Xendit\Configuration;
 use Xendit\Invoice\InvoiceApi;
@@ -90,7 +92,21 @@ class OrderController extends Controller
         $externalId = $data['external_id'];
         $order = Order::where('id', explode('-', $externalId)[1])->first();
         $order->status = $data['status'];
+        $order->status_service = 'Active';
+        $doctor = User::find($order->doctor_id);
         $order->save();
+        OneSignalFacade::sendNotificationToUser(
+            "You have a new " .$order->service . " from " . $order->patient->name,
+            $doctor->one_signal_token,
+            $url = null,
+            $data = null,
+            $buttons = null,
+            $schedule = null,
+        );
+
+        if($data['status'] == 'Success'){
+
+        }
 
         return response()->json([
             'status' => 'success',

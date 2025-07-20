@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [UserController::class, 'login'])->name('api.login');
-    Route::post('/firebase-login', [FirebaseAuthController::class, 'login']);
+    Route::post('/login/google', [FirebaseAuthController::class, 'login']);
 });
 
 Route::post('/register', [UserController::class, 'store'])->name('api.user.register');

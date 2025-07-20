@@ -62,7 +62,8 @@ class User extends Authenticatable implements FilamentUser
         'specialization_id',
         'registration_type',
         'status_verified',
-        'status'
+        'status',
+        'one_signal_token'
 
     ];
 
