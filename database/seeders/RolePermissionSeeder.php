@@ -7,6 +7,7 @@ use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
+use App\Enums\PermissionEnum;
 
 class RolePermissionSeeder extends Seeder
 {
@@ -22,23 +23,9 @@ class RolePermissionSeeder extends Seeder
         $guard = ['web', 'api']; // Specify the guards you want to use
 
         // === Permissions ===
-        $permissions = [
-            'view users',
-            'create users',
-            'edit users',
-            'delete users',
-            'view doctors',
-            'create doctors',
-            'edit doctors',
-            'delete doctors',
-        ];
-
-        foreach ($permissions as $perm) {
+        foreach (PermissionEnum::cases() as $perm) {
             foreach ($guard as $g) {
-                // Create permission for each guard
-                Permission::firstOrCreate([
-                    'name' => $perm,
-                     'guard_name' => $g]);
+                Permission::firstOrCreate(['name' => $perm->value, 'guard_name' => $g]);
             }
         }
 
@@ -51,19 +38,17 @@ class RolePermissionSeeder extends Seeder
         $admin->syncPermissions(Permission::where('guard_name','web')->get()); // semua
 
 
-        $doctor->syncPermissions(Permission::where('guard_name','api')->whereIn('name',[
-            'view users',
-            'view doctors',
-            'create doctors',
-            'edit doctors',
-        ])->get());
+       $doctor->syncPermissions(
+         Permission::where('guard_name', 'api')
+            ->whereIn('name', PermissionEnum::toValues(PermissionEnum::doctorRolePermissions()))
+            ->get()
+            );
 
-        $patient->syncPermissions(Permission::where('guard_name','api')->whereIn('name',[
-            'view doctors',
-            'create users', // Assuming patients can create their own user profile
-            'edit users', // Assuming patients can edit their own user profile
-            'view users', // Assuming patients can view their own user profile
-        ])->get());
+        $patient->syncPermissions(
+            Permission::where('guard_name', 'api')
+                ->whereIn('name', PermissionEnum::toValues(PermissionEnum::patientRolePermissions()))
+                ->get()
+        );
 
         // === Optional: Assign admin role to specific user ===
         $adminUser = User::where('email', 'admin@mail.com')->first();

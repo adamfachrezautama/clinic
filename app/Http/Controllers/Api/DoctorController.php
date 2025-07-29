@@ -70,13 +70,24 @@ class DoctorController extends Controller
     }
 
 
-    // showDoctorActive
+    // getDoctorActive
     public function getDoctorActive()
 
     {
-        $doctors = User::where('role', 'doctor')->where('status', 'active')->with('clinic', 'specialization')->get();
+        $doctors = User::where('role', 'doctor')->where('status', 'online')
+        ->with('clinic', 'specialization')->get();
 
         return response()->json(['status' => 'success', 'data' => $doctors]);
+    }
+
+    //getDoctorBySpecialist
+    public function getDoctorBySpecialist($specialist_id)
+       {
+        $doctors = User::where('role', 'doctor')->where('specialist_id', $specialist_id)->with('clinic', 'specialization')->get();
+        return response()->json([
+            'status' => 'success',
+            'data' => $doctors
+        ]);
     }
 
     public function searchDoctor(Request $request)

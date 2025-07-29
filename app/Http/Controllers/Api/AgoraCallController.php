@@ -45,7 +45,7 @@ class AgoraCallController extends Controller
 
     public function generate($channelId)
     {
-        $appId = env('AGORA_APP_ID'); // Diperbaiki
+        $appId = env('AGORA_APP_ID');
         $appCertificate = env('AGORA_APP_CERTIFICATE');
         $uid = rand(1, 23000);
         $expirationTimeInSeconds = 864000;

@@ -25,10 +25,10 @@ class StoreUserRequest extends FormRequest
             'name' => ['required', 'string'],
             'email' => ['required', 'email', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6','nullable'],
-            'role' => ['nullable', 'in:patient,doctor,admin'],
+            'role' => ['nullable', 'in:patient,doctor'],
             'registration_type' => ['required', 'in:patient,doctor'],
-            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048']
-
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
+            'status_verified' => 'sometimes|in:verified,pending,rejected',
         ];
     }
 }

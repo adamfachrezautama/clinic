@@ -22,7 +22,7 @@ class UpdateDoctorRequest extends FormRequest
     public function rules(): array
     {
         return [
-             'name' => 'sometimes|required|string|max:255',
+            'name' => 'sometimes|required|string|max:255',
             'email' => 'sometimes|required|email|unique:users,email,',
             'password' => 'sometimes|required|string|min:8',
             'role' => 'sometimes|required|string',
@@ -30,6 +30,11 @@ class UpdateDoctorRequest extends FormRequest
             'specialization_id' => 'nullable|exists:specializations,id',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'certification' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'chat_fee' => 'nullable|numeric|min:0',
+            'telemedicine_fee' => 'nullable|numeric|min:0',
+            'start_time' => 'nullable|date_format:H:i',
+            'end_time' => 'nullable|date_format:H:i',
+            // 'status_verified' => 'sometimes|in:verified,pending,rejected',
         ];
     }
 }

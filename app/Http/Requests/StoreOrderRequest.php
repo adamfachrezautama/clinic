@@ -29,7 +29,7 @@ class StoreOrderRequest extends FormRequest
             'duration' => 'required',
             'clinic_id' => 'required',
             'schedule' => 'required',
-
+            'status_service' => 'required',
         ];
     }
 }

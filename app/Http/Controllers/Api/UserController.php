@@ -65,28 +65,6 @@ class UserController extends Controller
         return response()->json(['status' => 'success', 'data' => $user]);
     }
 
-    public function updateGoogleId(Request $request, $id)
-    {
-        $user = User::findOrFail($id);
-        $user->google_id = $request->google_id;
-        $user->save();
-
-
-            return response()->json(['status' => 'success',
-                'data' => $user
-        ]);
-
-            return response()->json([
-                'status' => 'error',
-                'message' => 'User not found',
-
-        ], 404);
-
-
-        return response()->json(['status' => 'success', 'data' => $user]);
-
-    }
-
     public function update(UpdateUserRequest $request, $id)
     {
         $auth = auth()->user();
@@ -129,5 +107,39 @@ class UserController extends Controller
         }
 
         return response()->json(['status' => 'success', 'message' => 'Email is available'], 200);
+    }
+
+     public function updateToken(Request $request, $id)
+    {
+        $request->validate([
+            'one_signal_token' => 'required'
+        ]);
+
+        $token = $request->one_signal_token;
+
+        $user = User::find($id);
+
+        $user->update([
+            'one_signal_token' => $token
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $user
+        ], 200);
+    }
+
+    public function agreePrivacyPolicy($id)
+    {
+         $user = Auth::user($id);
+        $user->agreed_privacy_policy = true;
+        $user->privacy_policy_agreed_at = now();
+        $user->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Privacy policy agreed successfully',
+            'data' => $user
+        ]);
     }
 }

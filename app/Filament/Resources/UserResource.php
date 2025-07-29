@@ -105,7 +105,7 @@ class UserResource extends Resource
                     ->label('specialization')
                     ->options(Specialization::all()->pluck('name','id'))
                     ->searchable(),
-                 Select::make('status_registration')
+                 Select::make('status_verified')
                     ->options([
                         'pending' => 'pending',
                         'verified' => 'verified',

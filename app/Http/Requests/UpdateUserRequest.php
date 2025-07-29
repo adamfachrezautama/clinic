@@ -30,7 +30,8 @@ class UpdateUserRequest extends FormRequest
             'birth_date' => 'nullable|date',
             'password' => 'nullable|string|min:8|confirmed',
             'gender' => 'nullable|string',
-            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048']
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
+            'status_verified' => 'sometimes|in:verified,pending,rejected',
         ];
     }
 }
