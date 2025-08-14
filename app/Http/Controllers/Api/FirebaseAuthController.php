@@ -21,7 +21,7 @@ class FirebaseAuthController extends Controller
     public function login(Request $request)
     {
         try {
-            $idTokenString = $request->input('id_token');
+           $idTokenString = $request->input('id_token') ?? $request->get('id_token') ?? str_replace('Bearer ', '', $request->header('Authorization'));
 
             if (!$idTokenString) {
                 return response()->json(['error' => 'ID token kosong'], 400);
@@ -32,7 +32,7 @@ class FirebaseAuthController extends Controller
             $claims = $verifiedIdToken->claims()->all();
 
             // Ambil data dari token
-            $uid = $claims['user_id'] ?? null;
+           $uid = $claims['sub'] ?? $claims['user_id'] ?? null;
             $name = $claims['name'] ?? null;
             $email = $claims['email'] ?? null;
             $photo = $claims['picture'] ?? null;
@@ -48,15 +48,19 @@ class FirebaseAuthController extends Controller
 
             // Cek apakah user sudah ada
             $user = User::where('email', $email)->first();
+            $userExists = $user ? true : false;
+            $isNew = !$userExists;
+
 
             if ($user) {
                 // Update info jika user sudah ada
                 $user->update([
-                    'google_id' => $user->google_id ?? $uid,
+                    'google_id' => $uid,
                     'name' => $user->name ?? $name,
                     'photo' => $photo,
                     'email_verified_at' => $user->email_verified_at ?? now(),
                     'status' => 'online',
+
                 ]);
             } else {
                 // Buat user baru
@@ -68,7 +72,9 @@ class FirebaseAuthController extends Controller
                     'photo' => $photo,
                     'password' => Hash::make(bin2hex(random_bytes(16))),
                     'status' => 'online',
-                    'role' => 'user', // default role jika belum ada
+                    'role' => 'patient', // default role jika belum ada
+
+
                 ]);
                 $user->assignRole('patient');
             }
@@ -81,12 +87,14 @@ class FirebaseAuthController extends Controller
                 'message' => 'Login berhasil',
                 'data' => [
                     'token' => $token,
+                    'is_new' => $isNew,
                     'user' => [
                         'id' => $user->id,
                         'name' => $user->name,
                         'email' => $user->email,
                         'photo' => $user->photo,
                         'role' => $user->role,
+                        'clinic_id' => $user->clinic_id,
                     ],
                 ],
             ]);

@@ -53,8 +53,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/doctor/{doctor_id}', 'getOrderByDoctor')->middleware('permission:view transactions')->name('api.order.byDoctor');
         Route::get('/clinic/{clinic_id}', 'getOrderByClinic')->middleware('permission:view transactions')->name('api.order.byClinic');
         Route::get('/summary/{clinic_id}', 'getSummary')->middleware('permission:view transactions')->name('api.order.summary');
-        Route::post('/xendit-callback', 'handleCallback')->middleware('permission:create transactions')->name('api.order.xenditCallback');
-    });
+        Route::post('/xendit-callback', [OrderController::class, 'handleCallback'])
+        ->withoutMiddleware(['auth:sanctum', 'permission'])
+        ->name('api.order.xenditCallback');
+
+        Route::get('/doctor/{doctor_id}/{service}/{status_service}', [OrderController::class, 'getOrderByDoctorQuery'])->middleware('auth:sanctum');
+
+        });
+
 
     // AGORA
     Route::controller(AgoraCallController::class)->prefix('agora')->group(function () {

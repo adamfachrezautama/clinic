@@ -24,7 +24,7 @@ class AgoraCallController extends Controller
     {
         $request->validate([
             'patient_id' => 'required',
-            'doctor_id' => 'required', // Diperbaiki
+            'doctor_id' => 'required',
             'channel_name' => 'required',
             'call_id' => 'required',
         ]);

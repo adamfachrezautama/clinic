@@ -77,43 +77,77 @@ class OrderController extends Controller
 
      //handle callback xendit
     public function handleCallback(Request $request)
-    {
-        //check header 'x-callback-token
-        $xenditCallbackToken = env('XENDIT_CALLBACK_TOKEN', '');
-        $callbackToken = $request->header('x-callback-token');
-        if ($callbackToken != $xenditCallbackToken) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Unauthorized'
-            ], 401);
-        }
-
-        $data = $request->all();
-        $externalId = $data['external_id'];
-        $order = Order::where('id', explode('-', $externalId)[1])->first();
-        $order->status = $data['status'];
-        $order->status_service = 'Active';
-        $doctor = User::find($order->doctor_id);
-        $order->save();
-        OneSignalFacade::sendNotificationToUser(
-            "You have a new " .$order->service . " from " . $order->patient->name,
-            $doctor->one_signal_token,
-            $url = null,
-            $data = null,
-            $buttons = null,
-            $schedule = null,
-        );
-
-        if($data['status'] == 'Success'){
-
-        }
-
+{
+    // 1. Validasi x-callback-token
+    $callbackToken = $request->header('x-callback-token');
+    if ($callbackToken !== env('XENDIT_CALLBACK_TOKEN')) {
         return response()->json([
-            'status' => 'success',
-            'data' => $order
-        ]);
-
+            'status' => 'error',
+            'message' => 'Unauthorized'
+        ], 401);
     }
+
+    // 2. Ambil data dari webhook
+    $data = $request->all();
+    $externalId = $data['external_id'] ?? null;
+    $status = strtoupper($data['status'] ?? '');
+
+    if (!$externalId) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Missing external_id'
+        ], 400);
+    }
+
+    // 3. Parsing external_id (misalnya format "invoice-123")
+    $parts = explode('-', $externalId);
+    if (count($parts) < 2) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Invalid external_id format'
+        ], 400);
+    }
+
+    $orderId = $parts[1] ?? null;
+
+    // 4. Cari order di database
+    $order = Order::find($orderId);
+    if (!$order) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Order not found'
+        ], 404);
+    }
+
+    // 5. Update status berdasarkan Xendit
+    if ($status === 'PAID') {
+        $order->status = 'paid';
+        $order->status_service = 'Active';
+
+        // Kirim notifikasi ke dokter
+        $doctor = User::find($order->doctor_id);
+        if ($doctor && $doctor->one_signal_token) {
+            OneSignalFacade::sendNotificationToUser(
+                "You have a new {$order->service} from {$order->patient->name}",
+                $doctor->one_signal_token
+            );
+        }
+    } elseif ($status === 'EXPIRED') {
+        $order->status = 'expired';
+        $order->status_service = 'Cancelled';
+    } elseif ($status === 'PENDING') {
+        $order->status = 'pending';
+    }
+
+    $order->save();
+
+    // 6. Balikkan response ke Xendit
+    return response()->json([
+        'status' => 'success',
+        'data' => $order
+    ], 200);
+}
+
 
     //get order history by patient desc
     public function getOrderByPatient($patient_id)
@@ -167,4 +201,17 @@ class OrderController extends Controller
             ]
         ]);
     }
+
+     public function getOrderByDoctorQuery($doctor_id, $service, $status_service)
+    {
+        $orders = Order::where('doctor_id', $doctor_id)
+            ->where('service', $service)
+            ->where('status_service', $status_service)
+            ->with('patient', 'doctor', 'clinic')->orderBy('created_at', 'desc')->get();
+        return response()->json([
+            'status' => 'success',
+            'data' => $orders
+        ]);
+    }
+
 }
