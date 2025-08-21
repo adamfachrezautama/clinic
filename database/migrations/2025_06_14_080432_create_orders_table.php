@@ -21,7 +21,8 @@ return new class extends Migration
             $table->string('status')->default('waiting'); // waiting, paid, cancel
             $table->integer('duration'); // in minutes
             $table->foreignId('clinic_id')->constrained('clinics')->onDelete('cascade');
-            $table->dateTime('schedule'); // date and time of the appointment
+            $table->dateTime('start_time'); // date and time of the appointment
+            $table->dateTime('end_time')->nullable(); // end time of the appointment
             $table->string('status_service')->nullable();
             $table->timestamps();
         });

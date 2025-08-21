@@ -28,8 +28,10 @@ class StoreOrderRequest extends FormRequest
             'price' => 'required',
             'duration' => 'required',
             'clinic_id' => 'required',
-            'schedule' => 'required',
+            'start_time' => 'required', 'date',
+            'end_time'   =>'nullable', 'date',
             'status_service' => 'required',
+            'external_id' => 'nullable|string|unique:orders,external_id',
         ];
     }
 }

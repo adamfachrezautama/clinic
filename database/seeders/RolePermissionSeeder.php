@@ -30,12 +30,14 @@ class RolePermissionSeeder extends Seeder
         }
 
         // === Roles ===
-        $admin = Role::firstOrCreate(['name' => 'admin','guard_name' => 'web']);
+        $adminWeb = Role::firstOrCreate(['name' => 'admin','guard_name' => 'web']);
+        $adminApi = Role::firstOrCreate(['name' => 'admin','guard_name' => 'api']);
         $doctor = Role::firstOrCreate(['name' => 'doctor','guard_name' => 'api']);
         $patient = Role::firstOrCreate(['name' => 'patient','guard_name' => 'api']);
 
         // === Assign permissions to roles ===
-        $admin->syncPermissions(Permission::where('guard_name','web')->get()); // semua
+        $adminWeb->syncPermissions(Permission::where('guard_name','web')->get()); // semua
+        $adminApi->syncPermissions(Permission::where('guard_name','api')->get()); // semua
 
 
        $doctor->syncPermissions(
@@ -53,7 +55,7 @@ class RolePermissionSeeder extends Seeder
         // === Optional: Assign admin role to specific user ===
         $adminUser = User::where('email', 'admin@mail.com')->first();
         if ($adminUser) {
-            $adminUser->assignRole($admin);
+            $adminUser->assignRole($adminWeb, $adminApi);
         }
 
          // === Assign doctor + patient roles to doctor user ===

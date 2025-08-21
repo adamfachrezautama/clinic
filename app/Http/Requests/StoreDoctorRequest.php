@@ -24,12 +24,13 @@ class StoreDoctorRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|nullable|string|min:8',
-            'role' => 'required|string',
+            'password' => 'nullable|string|min:8',
+            'role' => 'string|in:doctor',
             'clinic_id' => 'nullable|exists:clinics,id',
             'specialization_id' => 'nullable|exists:specializations,id',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'certification' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            // 'certification' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'certification' => 'required|string',
         ];
     }
 }

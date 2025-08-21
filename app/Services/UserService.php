@@ -16,16 +16,9 @@ class UserService
         $user = User::create($data);
 
         // Tentukan role yang akan digunakan
-            $roleName = $data['role'] ?? 'patient';
-
-         // Cek apakah role valid
-        if (Role::where('name', $roleName)->where('guard_name', 'api')->exists()) {
-            $user->assignRole(Role::findByName($roleName, 'api'));
-        } else {
-            // Assign default role jika role tidak ditemukan
-            $user->assignRole('patient');
-        }
-            return $user;
+             $roles =Role::findbyName('patient','api');
+        $user->syncRoles($roles);// Assign the 'doctor' role to the new
+        return $user;
 
     }
 

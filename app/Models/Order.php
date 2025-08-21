@@ -28,9 +28,16 @@ class Order extends Model
         'status',
         'duration',
         'clinic_id',
-        'schedule',
+        'start_time',
+        'end_time',
         'status_service',
+        'external_id',
     ];
+
+    protected $casts = [
+    'start_time' => 'datetime',
+    'end_time'   => 'datetime',
+];
 
     public function patient()
     {

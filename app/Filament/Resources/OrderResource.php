@@ -48,7 +48,9 @@ class OrderResource extends Resource
                 Forms\Components\TextInput::make('clinic_id')
                     ->required()
                     ->numeric(),
-                Forms\Components\DateTimePicker::make('schedule')
+                Forms\Components\DateTimePicker::make('start_time')
+                    ->required(),
+                     Forms\Components\DateTimePicker::make('end_time')
                     ->required(),
             ]);
     }
@@ -78,7 +80,10 @@ class OrderResource extends Resource
                 Tables\Columns\TextColumn::make('clinic_id')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('schedule')
+                Tables\Columns\TextColumn::make('start_time')
+                    ->dateTime()
+                    ->sortable(),
+                    Tables\Columns\TextColumn::make('end_time')
                     ->dateTime()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')

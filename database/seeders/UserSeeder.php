@@ -18,7 +18,7 @@ class UserSeeder extends Seeder
             'name' => 'admin',
             'email' => 'admin@mail.com',
             'password' => bcrypt('1234567890'),
-            'role' => 'admin',
+            // 'role' => 'admin',
         ]);
 
          User::factory()->create([
@@ -32,7 +32,7 @@ class UserSeeder extends Seeder
             'name' => 'doctor1',
             'email' => 'doctor1@mail.com',
             'password' => bcrypt('1234567890'),
-            'role' => 'doctor',
+            // 'role' => 'doctor',
             'specialization_id' => 1,
         ]);
 

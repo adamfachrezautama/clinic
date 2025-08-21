@@ -15,6 +15,7 @@ Route::prefix('auth')->group(function () {
 
 Route::post('/register', [UserController::class, 'store'])->name('api.user.register');
 Route::post('/logout',[UserController::class, 'logout'])->name('api.logout');
+Route::post('/xendit-callback', [OrderController::class, 'handleCallback']);
 
 Route::middleware('auth:sanctum')->group(function () {
     // ✅ USER
@@ -39,10 +40,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', 'store')->middleware('permission:create doctors')->name('api.doctor.store');
         Route::put('/{id}', 'update')->middleware('permission:edit doctors')->name('api.doctor.update');
         Route::delete('/{id}', 'destroy')->middleware('permission:delete doctors')->name('api.doctor.destroy');
-
         Route::get('/active', 'getDoctorActive')->middleware('permission:view doctors')->name('api.doctor.showActive');
         Route::get('/specialist/{specialist_id}' ,'getDoctorBySpecialist')->middleware('permission:view doctors')->name('api.doctor.specialist');
         Route::get('/search', 'searchDoctor')->middleware('permission:view doctors')->name('api.doctor.search');
+        Route::get('/clinic/{id}', [DoctorController::class, 'getClinicById'])->name('api.doctor.getClinicById');
+
+
     });
 
     // ✅ ORDER
@@ -53,12 +56,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/doctor/{doctor_id}', 'getOrderByDoctor')->middleware('permission:view transactions')->name('api.order.byDoctor');
         Route::get('/clinic/{clinic_id}', 'getOrderByClinic')->middleware('permission:view transactions')->name('api.order.byClinic');
         Route::get('/summary/{clinic_id}', 'getSummary')->middleware('permission:view transactions')->name('api.order.summary');
-        Route::post('/xendit-callback', [OrderController::class, 'handleCallback'])
-        ->withoutMiddleware(['auth:sanctum', 'permission'])
-        ->name('api.order.xenditCallback');
-
-        Route::get('/doctor/{doctor_id}/{service}/{status_service}', [OrderController::class, 'getOrderByDoctorQuery'])->middleware('auth:sanctum');
-
+        Route::get('/doctor/{doctor_id}/{service}/{status_service}', [OrderController::class, 'getOrderByDoctorQuery'])->withoutMiddleware(['auth:sanctum', 'permission']);
         });
 
 
@@ -66,7 +64,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::controller(AgoraCallController::class)->prefix('agora')->group(function () {
         Route::get('/calls', 'index')->middleware('permission:view agora calls')->name('api.agora.calls.index');
         Route::post('/calls', 'store')->middleware('permission:create agora calls')->name('api.agora.calls.store');
-        Route::get('/generate/{channelId}', 'generate')->middleware('permission:view agora calls')->name('api.agora.generateToken');
+        Route::get('/token/{channelId}', 'generate')->middleware('permission:view agora calls')->name('api.agora.generateToken');
     });
 
 });

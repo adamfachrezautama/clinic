@@ -10,7 +10,13 @@ class DoctorService
 {
     public function create(array $data)
     {
-        $data['password'] = Hash::make($data['password']);
+        if (!empty($data['password'])) {
+                $data['password'] = Hash::make($data['password']);
+            } else {
+                // kasih default password kalau kosong
+                $data['password'] = Hash::make('password123');
+            }
+
         $doctor = User::create($data);
         $roles =[
             Role::findByName('doctor','api'),

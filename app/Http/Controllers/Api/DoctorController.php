@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateDoctorRequest;
 use App\Models\User;
 use App\Services\DoctorService;
 use Illuminate\Http\Request;
+use Spatie\Permission\Contracts\Role;
 
 class DoctorController extends Controller
 {
@@ -28,8 +29,6 @@ class DoctorController extends Controller
     public function store(StoreDoctorRequest $request)
     {
         $data = $request->validated();
-        $data['role'] = 'doctor'; // Set default role
-
         $doctor = $this->doctorService->create($data);
 
         if ($request->hasFile('photo')) {
@@ -74,8 +73,10 @@ class DoctorController extends Controller
     public function getDoctorActive()
 
     {
-        $doctors = User::where('role', 'doctor')->where('status', 'online')
-        ->with('clinic', 'specialization')->get();
+        $doctors = User::role('doctor')
+            ->where('status', 'online')
+            ->with(['clinic', 'specialization'])
+            ->get();
 
         return response()->json(['status' => 'success', 'data' => $doctors]);
     }
@@ -83,7 +84,7 @@ class DoctorController extends Controller
     //getDoctorBySpecialist
     public function getDoctorBySpecialist($specialist_id)
        {
-        $doctors = User::where('role', 'doctor')->where('specialist_id', $specialist_id)->with('clinic', 'specialization')->get();
+        $doctors = User::role('doctor')->where('specialist_id', $specialist_id)->with('clinic', 'specialization')->get();
         return response()->json([
             'status' => 'success',
             'data' => $doctors
@@ -92,9 +93,7 @@ class DoctorController extends Controller
 
     public function searchDoctor(Request $request)
     {
-        $query = User::where('role', 'doctor');
-
-
+        $query = User::role('doctor');
         if ($request->filled('name')) {
             $query->where('name', 'like', '%' . $request->name . '%');
         }
@@ -133,5 +132,25 @@ class DoctorController extends Controller
 
 
         return response()->json(['status' => 'success', 'data' => $doctors]);
+    }
+
+     public function getClinicById($id)
+    {
+        $clinic = \App\Models\Clinic::find($id);
+        $clinicName = $clinic->name;
+        $clinicImage = $clinic->image;
+        $totalDoctor = User::where('clinic_id', $id)->count();
+        $totalPatient = \App\Models\Order::where('clinic_id', $id)->count();
+        $totalIncome = \App\Models\Order::where('clinic_id', $id)->where('status', 'success')->sum('price');
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'clinic_name' => $clinicName,
+                'total_doctor' => $totalDoctor,
+                'total_patient' => $totalPatient,
+                'clinic_image' => $clinicImage,
+                'total_income' => $totalIncome
+            ]
+        ]);
     }
 }

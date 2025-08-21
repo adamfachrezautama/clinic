@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use Xendit\Configuration;
 use Xendit\Invoice\InvoiceApi;
 use Xendit\Invoice\CreateInvoiceRequest;
-
+use Berkayk\OneSignal\OneSignalFacade as OneSignal;
 class OrderController extends Controller
 {
     //
@@ -25,47 +25,94 @@ class OrderController extends Controller
         ]);
     }
 
-    public function store(StoreOrderRequest $request)
-    {
-        $data = $request->validated();
+    // public function store(StoreOrderRequest $request)
+    // {
+    // $data = $request->validated();
 
-        $order = Order::create($data);
+    // // Buat order
+    // $order = Order::create($data);
 
-        // XENDIT_SERVER_KEY
+    // // Set Xendit API key
+    // Configuration::setXenditKey(config('services.xendit.api_key', ''));
 
-       Configuration::setXenditKey(config('services.xendit.api_key', ''));
-        $apiInstance = new InvoiceApi();
-        $create_invoice_request = new CreateInvoiceRequest([
-            'external_id' => 'INV-' . $order->id,
-            'description' => 'Payment for ' . $order->service,
-            'amount' => $order->price,
-            'invoice_duration' => 172800,
-            'currency' => 'IDR',
-            'reminder_time' => 1,
-            'success_redirect_url' => url('flutter/success'),
-            'failure_redirect_url' => url('flutter/failure'),
-        ]);
+    // $apiInstance = new InvoiceApi();
+    // $externalId = 'INV-' . $order->id; // external_id unik
 
-        try {
-            $result = $apiInstance->createInvoice($create_invoice_request);
-            $payment_url = $result->getInvoiceUrl();
-            $order->payment_url = $payment_url;
-            $order->save();
+    // $create_invoice_request = new CreateInvoiceRequest([
+    //     'external_id' => $externalId,
+    //     'description' => 'Payment for ' . $order->service,
+    //     'amount' => $order->price,
+    //     'invoice_duration' => 172800,
+    //     'currency' => 'IDR',
+    //     'reminder_time' => 1,
+    //     'success_redirect_url' => url('flutter/success'),
+    //     'failure_redirect_url' => url('flutter/failure'),
+    // ]);
 
-            return response()->json([
-                'status' => 'success',
-                'data' => [
-                    'order' => $order,
-                    'payment_url' => $payment_url
-                ]
+    // try {
+    //     // Buat invoice
+    //     $result = $apiInstance->createInvoice($create_invoice_request);
+
+    //     // Ambil payment_url dan simpan ke order
+    //     $order->payment_url = $result->getInvoiceUrl();
+    //     $order->external_id = $externalId; // Simpan external_id supaya callback bisa menemukan order
+    //     $order->save();
+
+    //     return response()->json([
+    //         'status' => 'success',
+    //         'data' => [
+    //             'order' => $order,
+    //             'payment_url' => $order->payment_url,
+    //             'external_id' => $externalId,
+    //         ]
+    //     ]);
+    // } catch (\Exception $e) {
+    //     return response()->json([
+    //         'status' => 'error',
+    //         'message' => $e->getMessage()
+    //     ], 500);
+    // }
+    // }
+
+        public function store(StoreOrderRequest $request)
+        {
+            $data = $request->validated();
+
+            // Buat order
+            $order = Order::create($data);
+            //XENDIT_SERVER_KEY
+            Configuration::setXenditKey(config('services.xendit.api_key', ''));
+
+            $apiInstance = new InvoiceApi();
+            $create_invoice_request = new CreateInvoiceRequest([
+                'external_id' => 'INV-' . $order->id,
+                'description' => 'Payment for ' . $order->service,
+                'amount' => $order->price,
+                'invoice_duration' => 172800,
+                'currency' => 'IDR',
+                'reminder_time' => 1,
+                'success_redirect_url' => 'flutter/success',
+                'failure_redirect_url' => 'flutter/failure',
             ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
+
+
+            try {
+                $result = $apiInstance->createInvoice($create_invoice_request);
+                $payment_url = $result->getInvoiceUrl();
+                $order->payment_url = $payment_url;
+                $order->save();
+
+                return response()->json([
+                    'status' => 'success',
+                    'data' => $order
+                ], 201);
+            } catch (\Xendit\XenditSdkException $e) {
+                echo 'Exception when calling InvoiceApi->createInvoice: ', $e->getMessage(), PHP_EOL;
+                echo 'Full Error: ', json_encode($e->getFullError()), PHP_EOL;
+            }
         }
-    }
+
+
     public function show($id)
     {
         $order = Order::with('patient', 'doctor', 'clinic')->findOrFail($id);
@@ -75,80 +122,74 @@ class OrderController extends Controller
         ]);
     }
 
-     //handle callback xendit
     public function handleCallback(Request $request)
-{
-    // 1. Validasi x-callback-token
-    $callbackToken = $request->header('x-callback-token');
-    if ($callbackToken !== env('XENDIT_CALLBACK_TOKEN')) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Unauthorized'
-        ], 401);
-    }
+    {
+        // cek token callback
+        $xenditCallbackToken = env('XENDIT_CALLBACK_TOKEN', '');
+        $callbackToken = $request->header('x-callback-token');
+        if ($callbackToken != $xenditCallbackToken) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized'
+            ], 401);
+        }
 
-    // 2. Ambil data dari webhook
-    $data = $request->all();
-    $externalId = $data['external_id'] ?? null;
-    $status = strtoupper($data['status'] ?? '');
+        $data = $request->all();
+        // \Log::info('Xendit callback payload:', $data); // buat debug
 
-    if (!$externalId) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Missing external_id'
-        ], 400);
-    }
+        $externalId = $data['external_id'] ?? null;
+        if (!$externalId) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'external_id not found'
+            ], 400);
+        }
 
-    // 3. Parsing external_id (misalnya format "invoice-123")
-    $parts = explode('-', $externalId);
-    if (count($parts) < 2) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Invalid external_id format'
-        ], 400);
-    }
+        $parts = explode('-', $externalId);
+        $orderId = $parts[1] ?? null;
+        $order = Order::find($orderId);
 
-    $orderId = $parts[1] ?? null;
+        if (!$order) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Order not found'
+            ], 404);
+        }
 
-    // 4. Cari order di database
-    $order = Order::find($orderId);
-    if (!$order) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Order not found'
-        ], 404);
-    }
-
-    // 5. Update status berdasarkan Xendit
-    if ($status === 'PAID') {
-        $order->status = 'paid';
+        $status = $data['status'] ?? null;
+        $order->status = $status;
         $order->status_service = 'Active';
+        $order->save();
 
-        // Kirim notifikasi ke dokter
         $doctor = User::find($order->doctor_id);
+
         if ($doctor && $doctor->one_signal_token) {
-            OneSignalFacade::sendNotificationToUser(
+            OneSignal::sendNotificationToUser(
                 "You have a new {$order->service} from {$order->patient->name}",
                 $doctor->one_signal_token
             );
         }
-    } elseif ($status === 'EXPIRED') {
-        $order->status = 'expired';
-        $order->status_service = 'Cancelled';
-    } elseif ($status === 'PENDING') {
-        $order->status = 'pending';
+
+        // cek status
+        if ($status === 'success') {
+            $order->status = 'success';
+            $order->status_service = 'Active';
+            $order->start_time = now();
+            $order->end_time = now()->addMinutes($order->duration);
+            $order->save();
+
+            // Kirim notifikasi ke pasien
+            OneSignal::sendNotificationToUser(
+                "Your appointment for {$order->service} with Dr. {$doctor->name} is confirmed.",
+                $order->patient->one_signal_token
+            );
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $order
+        ]);
     }
-
-    $order->save();
-
-    // 6. Balikkan response ke Xendit
-    return response()->json([
-        'status' => 'success',
-        'data' => $order
-    ], 200);
-}
-
-
     //get order history by patient desc
     public function getOrderByPatient($patient_id)
     {
@@ -184,8 +225,8 @@ class OrderController extends Controller
     {
         $orders = Order::where('clinic_id', $clinic_id)->with('patient', 'doctor', 'clinic')->get();
         $orderCount = $orders->count();
-        //total income order status paid
-        $totalIncome = $orders->where('status', 'paid')->sum('price');
+        //total income order status success
+        $totalIncome = $orders->where('status', 'success')->sum('price');
         //doctor count
         $doctorCount = $orders->groupBy('doctor_id')->count();
         //patient count

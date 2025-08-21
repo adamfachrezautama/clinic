@@ -23,18 +23,23 @@ class AgoraCallController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'patient_id' => 'required',
-            'doctor_id' => 'required',
-            'channel_name' => 'required',
-            'call_id' => 'required',
+            'patient_id' => 'required|exists:users,id',
+            'doctor_id' => 'required|exists:users,id',
+            'channel_name' => 'required|string|max:255',
+            'call_id' => 'required|string|unique:agora_calls,call_id',
         ]);
 
-        $agoraCall = AgoraCall::create($request->only([
-            'patient_id',
-            'doctor_id',
-            'channel_name',
-            'call_id',
-        ]));
+            $data = $request->all();
+            $patient_id = $data['patient_id'];
+            $doctor_id = $data['doctor_id'];
+            $channel_name = $data['channel_name'];
+            $call_id = $data['call_id'];
+            $agoraCall = AgoraCall::create([
+                'patient_id' => $patient_id,
+                'doctor_id' => $doctor_id,
+                'channel_name' => $channel_name,
+                'call_id' => $call_id
+        ]);
 
         return response()->json([
             'status' => 'success',
@@ -43,27 +48,46 @@ class AgoraCallController extends Controller
         ], 201);
     }
 
-    public function generate($channelId)
+    public function generate(Request $request, $channelId)
     {
+        $request->validate([
+            'role' => 'nullable|in:publisher,subscriber'
+        ]);
+
         $appId = env('AGORA_APP_ID');
         $appCertificate = env('AGORA_APP_CERTIFICATE');
-        $uid = rand(1, 23000);
-        $expirationTimeInSeconds = 864000;
-        $currentTimeStamp = time();
-        $privilegeExpiredTs = $currentTimeStamp + $expirationTimeInSeconds;
+
+        if (!$appId || !$appCertificate) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Agora credentials not set'
+            ], 500);
+        }
+
+        $uid = auth()->id() ?? rand(1, 999999);
+        $expirationTimeInSeconds = 3600; // 1 jam
+        $privilegeExpiredTs = time() + $expirationTimeInSeconds;
+
+        $role = $request->input('role') === 'subscriber'
+            ? RtcTokenBuilder::RoleSubscriber
+            : RtcTokenBuilder::RolePublisher;
 
         $token = RtcTokenBuilder::buildTokenWithUid(
             $appId,
             $appCertificate,
             $channelId,
             $uid,
-            RtcTokenBuilder::RolePublisher,
+            $role,
             $privilegeExpiredTs
         );
 
         return response()->json([
+            'status' => 'success',
             'token' => $token,
-            'uid' => $uid
+            'uid' => $uid,
+            'role' => $role == RtcTokenBuilder::RolePublisher ? 'publisher' : 'subscriber',
+            'expired_at' => $privilegeExpiredTs
         ]);
     }
+
 }
